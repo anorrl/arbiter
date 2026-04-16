@@ -150,21 +150,26 @@ public class Program
 
             // do a bunch of variations..
             string jobId = Guid.NewGuid().ToString();
-            int port = Helpers.GetPort();
             int pid;
             string? render;
             // get client's ip for logging
             var clientIP = req.Headers.TryGetValue("X-Forwarded-For", out var forwarded) ? forwarded.ToString().Split(',')[0].Trim() : req.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-            Logger.Info($"New client {clientIP} creating gameserver with place {body.PlaceId} with port {port}");
+            Logger.Info($"New client {clientIP} creating gameserver with place {body.PlaceId} with jobId: {jobId}");
 
             // start the gameserver!
-            int fakeahport = Helpers.StartGameserver(jobId, body.PlaceId, out render, body.TeamCreate, out int _, out pid);
+            int port = Helpers.StartGameserver(jobId, body.PlaceId, body.MaxPlayers, out render, body.TeamCreate, out int _, out pid);
 
-            if (fakeahport == 0)
+            if (port == 0)
                 return Results.Problem("ACCService couldn't execute OpenJob");
 
-            return Results.Json(new { status = "ready", jobId, fakeahport, pid });
+            return Results.Json(new 
+            {
+                status = "ready", 
+                jobId,
+                port, 
+                pid
+            });
         }).RequireRateLimiting("strict");
 
         app.MapPost("/api/v1/gameserver/kill", (HttpRequest http, KillRequest req) =>
@@ -419,7 +424,7 @@ public record RenderRequest(int PlaceId);
 public record ARenderRequest(int UserId, bool IsHeadshot, bool IsClothing);
 public record MRenderRequest(int AssetId);
 public record MMRenderRequest(int MeshId);
-public record GameserverRequest(int PlaceId, bool TeamCreate);
+public record GameserverRequest(int PlaceId, int MaxPlayers, bool TeamCreate);
 public record KillRequest(int pid);
 public record GSMJob
 {

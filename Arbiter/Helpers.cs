@@ -121,7 +121,7 @@ static class Helpers
         try
         {
             string? tmp;
-            SOAP(Guid.NewGuid().ToString(), port, 0, "return true", 10, 0, out tmp, enforceSigning: false, jobtype: "BatchJobEx");
+            SOAP(Guid.NewGuid().ToString(), port, 0, "return true", 10, 0, out tmp, jobtype: "BatchJobEx");
         }
         catch {}
 
@@ -148,7 +148,7 @@ static class Helpers
         }
         if (!alive) { Kill(proc); return (null, 0); }
 
-        try { string? tmp; SOAP(Guid.NewGuid().ToString(), port, 0, "Instance.new('Part', workspace) game:GetService('RunService'):Run()", 2, 0, out tmp, enforceSigning: false, jobtype: "BatchJob"); } catch { } // we probably dont need to render if were just starting a gameserver.. just run physics
+        try { string? tmp; SOAP(Guid.NewGuid().ToString(), port, 0, "Instance.new('Part', workspace) game:GetService('RunService'):Run()", 2, 0, out tmp, jobtype: "BatchJob"); } catch { } // we probably dont need to render if were just starting a gameserver.. just run physics
 
         lock (PoolLock)
         {
@@ -556,10 +556,10 @@ static class Helpers
         return true;
     }
 
-    public static int StartGameserver(string jobId, int placeId, out string? render, bool teamcreate, out int fakeahport, out int pid)
+    public static int StartGameserver(string jobId, int placeId, int maxPlayers, out string? render, bool teamcreate, out int port, out int pid)
     {
         render = null;
-        fakeahport = GetGameServerPort();
+        port = GetGameServerPort();
         pid = 0;
         bool panic = false;
 
@@ -606,7 +606,7 @@ static class Helpers
 
         pid = proc.Id;
 
-        if (!SOAP(jobId, SOAPPort, placeId, Config.GSScript, 60, 1, out render, teamcreate, fakeahport, jobtype: "OpenJobEx"))
+        if (!SOAP(jobId, SOAPPort, placeId, Config.GSScript, 60, 1, out render, teamcreate, port, jobtype: "OpenJobEx", maxPlayers: maxPlayers))
         {
             Kill(proc);
 
@@ -633,14 +633,14 @@ static class Helpers
                 JobId = jobId,
                 PlaceId = placeId,
                 Pid = pid,
-                Port = fakeahport,
+                Port = port,
                 ExpiresAt = DateTime.UtcNow.AddSeconds(604800),
                 LastHeartbeat = DateTime.UtcNow,
                 Alive = true
             };
         }
 
-        return fakeahport;
+        return port;
     }
 
     private static Process? ACCService(int port)
@@ -691,7 +691,7 @@ static class Helpers
                 try
                 {
                     string? tmp;
-                    SOAP(Guid.NewGuid().ToString(), port, 0, "return true", 5, 0, out tmp, enforceSigning: false, jobtype: "BatchJobEx");
+                    SOAP(Guid.NewGuid().ToString(), port, 0, "return true", 5, 0, out tmp, jobtype: "BatchJobEx");
                 }
                 catch { }
 
@@ -813,7 +813,7 @@ static class Helpers
         }
     }
 
-    private static bool SOAP(string jobId, int port, int placeId, string type, int howlonguntilwedie, int category, out string? render, bool teamcreate = false, int fakeahport = 53640, bool headshot = false, bool isclothing = false, List<LuaValue>? arguments = null, bool enforceSigning = true, string jobtype = "OpenJobEx")
+    private static bool SOAP(string jobId, int port, int placeId, string type, int howlonguntilwedie, int category, out string? render, bool teamcreate = false, int fakeahport = 53640, bool headshot = false, bool isclothing = false, List<LuaValue>? arguments = null, string jobtype = "OpenJobEx", int maxPlayers = 100)
     {
         render = null;
 
@@ -830,10 +830,12 @@ static class Helpers
             type = type.Replace("{teamcreate}", teamcreate.ToString().ToLower());
             type = type.Replace("{isheadshot}", headshot.ToString().ToLower());
             type = type.Replace("{isclothing}", isclothing.ToString().ToLower());
+            type = type.Replace("{maxplayers}", maxPlayers.ToString());
 
             var xml = new StringBuilder();
             if (arguments != null && arguments.Count > 0)
             {
+                // vv what is wrong with you
                 // what the fuck was i even thinking
                 xml.AppendLine("    <rob:arguments>");
                 xml.AppendLine("      <rob:ArrayOfLuaValue>");
