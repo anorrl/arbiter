@@ -656,7 +656,7 @@ static class Helpers
                 Arguments = win ? $"/Console /content:content\\\\ {port}" : $"\"{exe}\" /Console /content:content\\\\ {port}",
                 WorkingDirectory = Config.ACCDirectory,
                 UseShellExecute = true,
-                CreateNoWindow = false
+                CreateNoWindow = true
             };
 
             var proc = Process.Start(psi);
@@ -820,6 +820,7 @@ static class Helpers
         Config.ReloadScripts();
         try
         {
+            ServicePointManager.Expect100Continue = false;
             ServicePointManager.UseNagleAlgorithm = false;
 
             type = type.Replace("{placeId}", placeId.ToString());
@@ -888,6 +889,7 @@ static class Helpers
             req.Headers.Add("SOAPAction", jobtype);
             req.Headers.Host = $"127.0.0.1:{port}";
             req.Headers.ConnectionClose = true;
+            client.DefaultRequestHeaders.ExpectContinue = false;
 
             using var resp = client.SendAsync(req, HttpCompletionOption.ResponseContentRead).GetAwaiter().GetResult();
             var responseText = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
