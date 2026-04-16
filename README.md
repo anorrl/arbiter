@@ -1,3 +1,7 @@
-# ANotherRccServiceArbiterLol
+# .arbiter
 
-ANotherRccServiceArbiterLol (ANRSAL for short) is an arbiter designed to make gameservers and render with early 2016 RCCService.
+also known as ANotherRccServiceArbiterLol (ANRSAL)
+
+This is a forked repo from [Aria](https://unc-nnected/ANotherRccServiceArbiterLol).
+
+Please check their original project out! This project is meant to build on top of it and lean it more for ANORRL support!
