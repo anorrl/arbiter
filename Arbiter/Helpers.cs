@@ -633,6 +633,7 @@ static class Helpers
                 JobId = jobId,
                 PlaceId = placeId,
                 Pid = pid,
+                SOAPPort = port,
                 Port = port,
                 ExpiresAt = DateTime.UtcNow.AddSeconds(604800),
                 LastHeartbeat = DateTime.UtcNow,
@@ -655,8 +656,8 @@ static class Helpers
                 FileName = win ? exe : "wine",
                 Arguments = win ? $"/Console /content:content\\\\ {port}" : $"\"{exe}\" /Console /content:content\\\\ {port}",
                 WorkingDirectory = Config.ACCDirectory,
-                UseShellExecute = true,
-                CreateNoWindow = true
+                UseShellExecute = false,
+                CreateNoWindow = false
             };
 
             var proc = Process.Start(psi);
@@ -951,7 +952,7 @@ static class Helpers
                 return false;
         }
 
-        if (!SOAPRenewLease(job.Port, job.JobId, seconds))
+        if (!SOAPRenewLease(job.SOAPPort, job.JobId, seconds))
             return false;
 
         lock (JobsLock)

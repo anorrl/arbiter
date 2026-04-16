@@ -109,8 +109,8 @@ public class Program
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
         });
 
-        builder.Logging.ClearProviders();
-        builder.Logging.SetMinimumLevel(LogLevel.Warning);
+        /*builder.Logging.ClearProviders();
+        builder.Logging.SetMinimumLevel(LogLevel.Information);*/
 
         var app = builder.Build();
 
@@ -428,6 +428,7 @@ public record KillRequest(int pid);
 public record GSMJob
 {
     public string JobId { get; init; } = "";
+    public int SOAPPort { get; init; }
     public int Port { get; init; }
     public int PlaceId { get; init; }
     public int Pid { get; set; }
