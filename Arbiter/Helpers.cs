@@ -633,7 +633,7 @@ static class Helpers
                 JobId = jobId,
                 PlaceId = placeId,
                 Pid = pid,
-                SOAPPort = port,
+                SOAPPort = SOAPPort,
                 Port = port,
                 ExpiresAt = DateTime.UtcNow.AddSeconds(604800),
                 LastHeartbeat = DateTime.UtcNow,
