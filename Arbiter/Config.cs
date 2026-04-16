@@ -26,9 +26,6 @@ static class Config
     public static bool Ready { get; set; } = false; // DO NOT CHANGE THIS. THIS WILL BE AUTO SET IF ACCSERVICES ARE READY.
     public static bool realtime { get; private set; } = false;
     public static string name = "ACCService";
-    public static bool signing { get; private set; } = false;
-    public static bool inject { get; private set; } = false;
-    public static bool autistic { get; private set; } = false;
     public static bool poolgs { get; private set; } = false;
 
     public static void ReloadScripts()
@@ -43,34 +40,7 @@ static class Config
                 string content = File.ReadAllText(path);
                 content = content.Replace("\r\n", "\n").Trim();
 
-                if (signing)
-                {
-                    var lines = content.Split('\n', StringSplitOptions.None);
-
-                    bool hasSignature = lines.Length > 0 && lines[0].Trim().StartsWith("--anrsalsig%") && lines[0].Trim().EndsWith("%");
-
-                    if (!hasSignature)
-                    {
-                        SignScript(path, content);
-                        content = File.ReadAllText(path).Replace("\r\n", "\n").Trim();
-                        lines = content.Split('\n', StringSplitOptions.None);
-                    }
-
-                    string signatureLine = lines[0].Trim();
-                    string scriptWithoutSig = string.Join("\n", lines.Skip(1)).Trim();
-
-                    if (!Verification(scriptWithoutSig, signatureLine))
-                    {
-                        Logger.Error($"Signature invalid: {path}, {signatureLine}");
-                        return;
-                    }
-
-                    scriptField = signatureLine + "\n" + scriptWithoutSig;
-                }
-                else
-                {
-                    scriptField = content;
-                }
+                scriptField = content;
             }
 
             LoadScript(ref GSScript, GSScriptPath);
@@ -85,101 +55,6 @@ static class Config
         catch (Exception ex)
         {
             Logger.Error("Configuration reload failed: " + ex);
-        }
-    }
-
-    public static string Signature(string script)
-    {
-        script = script.Replace("\r\n", "\n");
-
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(SECRET));
-        byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(script));
-
-        string base64 = Convert.ToBase64String(hash);
-
-        char[] arr = base64.ToCharArray();
-        Array.Reverse(arr);
-        string reversed = new string(arr);
-
-        string finalSig = $"--anrsalsig%{reversed}%";
-
-        if (debug)
-            Logger.Print($"Signed script with {finalSig}");
-
-        return finalSig;
-    }
-
-    public static bool Verification(string script, string signature)
-    {
-        try
-        {
-            string fakeahscript = script.TrimStart();
-            if (fakeahscript.StartsWith("return ", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            if (string.IsNullOrWhiteSpace(signature))
-                return false;
-
-            string sig = signature.Trim();
-
-            string prefix = "--anrsalsig%";
-            if (!sig.StartsWith(prefix) || !sig.EndsWith("%"))
-                return false;
-
-            string sigValue = sig.Substring(prefix.Length, sig.Length - prefix.Length - 1);
-
-            char[] arr = sigValue.ToCharArray();
-            Array.Reverse(arr);
-            string originalBase64 = new string(arr);
-
-            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(SECRET));
-
-            script = script.Replace("\r\n", "\n");
-
-            byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(script));
-            string computedBase64 = Convert.ToBase64String(hash);
-
-            if (debug)
-            {
-                Logger.Info($"Computed Base64: {computedBase64}");
-            }
-
-            return CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(computedBase64), Encoding.UTF8.GetBytes(originalBase64));
-        }
-        catch (Exception ex)
-        {
-            if (debug) Logger.Error($"Verification exception: {ex}");
-            return false;
-        }
-    }
-
-    public static void SignScript(string path, string script)
-    {
-        try
-        {
-            if (script.StartsWith("--anrsalsig%"))
-            {
-                int firstNewline = script.IndexOf('\n');
-                if (firstNewline != -1)
-                    script = script.Substring(firstNewline + 1);
-            }
-
-            script = script.Replace("\r\n", "\n");
-
-            string sig = Signature(script);
-
-            string signedContent = sig + "\n" + script;
-
-            File.WriteAllText(path, signedContent);
-
-            if (debug)
-                Logger.Info($"Signed script: {path}");
-        }
-        catch (Exception ex)
-        {
-            Logger.Error($"Couldn't save signed script {path}: {ex}");
         }
     }
 
@@ -214,12 +89,6 @@ static class Config
                         throw new FileNotFoundException($"Script not found for {args[i]}", path);
 
                     string scriptContent = File.ReadAllText(path);
-
-                    if (signing)
-                    {
-                        SignScript(path, scriptContent);
-                        scriptContent = File.ReadAllText(path);
-                    }
 
                     switch (args[i - 1])
                     {
@@ -284,14 +153,14 @@ static class Config
                     realtime = true;
                     break;
 
-                case "--name": // accservice name (example: RCCService)
+                case "--name": // accservice name (example: ACCService)
                     if (i + 1 >= args.Length)
                         throw new ArgumentException("--name requires a value");
 
                     name = args[++i];
                     break;
 
-                case "--poolforgameservers": // use pooled rccservices for gameservers
+                case "--poolforgameservers": // use pooled accservices for gameservers
                     poolgs = true;
                     break;
             }

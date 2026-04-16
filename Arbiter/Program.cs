@@ -13,6 +13,9 @@ Now everybody, do the propaganda
 And sing along to the age of paranoia
 
 */
+
+// project created by Aria, forked by grace.
+
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,7 +26,7 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        Console.Title = "ANotherRccServiceArbiterLol";
+        Console.Title = "ANORRL Arbiter";
         try
         {
             // parse config
@@ -159,7 +162,7 @@ public class Program
             int fakeahport = Helpers.StartGameserver(jobId, body.PlaceId, out render, body.TeamCreate, out int _, out pid);
 
             if (fakeahport == 0)
-                return Results.Problem("RCCService couldn't execute OpenJob");
+                return Results.Problem("ACCService couldn't execute OpenJob");
 
             return Results.Json(new { status = "ready", jobId, fakeahport, pid });
         }).RequireRateLimiting("strict");
@@ -235,10 +238,10 @@ public class Program
             Logger.Info($"New client {clientIP} creating avatar render with userId {body.UserId} with port {port}");
 
             if (!Helpers.ARender(jobId, body.UserId, out render, body.IsHeadshot, body.IsClothing))
-                return Results.Problem("RCCService couldn't execute OpenJob");
+                return Results.Problem("ACCService couldn't execute OpenJob");
 
             if (render == null)
-                return Results.Problem("RCCService failed to render");
+                return Results.Problem("ACCService failed to render");
 
             return Results.Json(new
             {
@@ -268,10 +271,10 @@ public class Program
             Logger.Info($"New client {clientIP} creating place render with placeId {body.PlaceId} with port {port}");
 
             if (!Helpers.Render(jobId, body.PlaceId, out render))
-                return Results.Problem("RCCService couldn't execute OpenJob");
+                return Results.Problem("ACCService couldn't execute OpenJob");
 
             if (render == null)
-                return Results.Problem("RCCService failed to render");
+                return Results.Problem("ACCService failed to render");
 
             return Results.Json(new
             {
@@ -301,10 +304,10 @@ public class Program
             Logger.Info($"New client {clientIP} creating model render with assetId {body.AssetId} with port {port}");
 
             if (!Helpers.MRender(jobId, body.AssetId, out render))
-                return Results.Problem("RCCService couldn't execute OpenJob");
+                return Results.Problem("ACCService couldn't execute OpenJob");
 
             if (render == null)
-                return Results.Problem("RCCService failed to render");
+                return Results.Problem("ACCService failed to render");
 
             return Results.Json(new
             {
@@ -334,10 +337,10 @@ public class Program
             Logger.Info($"New client {clientIP} creating model render with MeshId {body.MeshId} with port {port}");
 
             if (!Helpers.MMRender(jobId, body.MeshId, out render))
-                return Results.Problem("RCCService couldn't execute OpenJob");
+                return Results.Problem("ACCService couldn't execute OpenJob");
 
             if (render == null)
-                return Results.Problem("RCCService failed to render");
+                return Results.Problem("ACCService failed to render");
 
             return Results.Json(new
             {
@@ -404,7 +407,7 @@ public class Program
             Helpers.killallthefags();
         });
 
-        Logger.Print("Intializing RCCService Pool");
+        Logger.Print("Intializing ACCService Pool");
         Helpers.runPoolManager();
         Thread.Sleep(3000);
         app.Run($"http://0.0.0.0:{Config.port}");

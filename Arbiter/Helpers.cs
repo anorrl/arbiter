@@ -31,7 +31,7 @@ static class Helpers
     private static readonly HashSet<int> dedicated = new();
     private const int MaxDedicated = 2;
 
-    private static int howmuchRCCService()
+    private static int howmuchACCService()
     {
         return idle.Count + pending.Count + active.Count;
     }
@@ -43,7 +43,7 @@ static class Helpers
             if (_isFilling)
                 return;
 
-            int current = howmuchRCCService();
+            int current = howmuchACCService();
             if (current >= TargetPool)
                 return;
 
@@ -60,7 +60,7 @@ static class Helpers
 
                     lock (PoolLock)
                     {
-                        if (howmuchRCCService() >= TargetPool)
+                        if (howmuchACCService() >= TargetPool)
                             break;
 
                         port = GetPort();
@@ -90,7 +90,7 @@ static class Helpers
 
     private static Process? startPending(int port)
     {
-        var proc = RCCService(port);
+        var proc = ACCService(port);
         if (proc == null)
         {
             return null;
@@ -105,7 +105,7 @@ static class Helpers
         var alive = false;
         for (int i = 0; i < attempts; i++)
         {
-            if (AwaitRCCService(port, 20)) {
+            if (AwaitACCService(port, 20)) {
                 alive = true;
                 break;
             }
@@ -128,20 +128,20 @@ static class Helpers
         return proc;
     }
 
-    private static (Process? proc, int port) startDedicatedRCCService()
+    private static (Process? proc, int port) startDedicatedACCService()
     {
         int port = GetPort();
-        var proc = RCCService(port);
+        var proc = ACCService(port);
         if (proc == null) return (null, 0);
 
         proc.EnableRaisingEvents = true;
-        proc.Exited += (_, __) => RCCServiceExit(proc.Id, port);
+        proc.Exited += (_, __) => ACCServiceExit(proc.Id, port);
 
         const int attempts = 20;
         bool alive = false;
         for (int i = 0; i < attempts; i++)
         {
-            if (!AwaitRCCService(port, 2)) {
+            if (!AwaitACCService(port, 2)) {
                 alive = true;
                 break;
             }
@@ -160,7 +160,7 @@ static class Helpers
         return (proc, port);
     }
 
-    private static (Process? proc, int port, bool panic) getRCCService()
+    private static (Process? proc, int port, bool panic) getACCService()
     {
         while (true)
         {
@@ -174,7 +174,7 @@ static class Helpers
                     var proc = kv.Value;
                     idle.Remove(port);
 
-                    if (!AwaitRCCService(port, 2))
+                    if (!AwaitACCService(port, 2))
                     {
                         Kill(proc);
                         usage.Remove(port);
@@ -187,7 +187,7 @@ static class Helpers
                     return (proc, port, false);
                 }
 
-                if (howmuchRCCService() < TargetPool)
+                if (howmuchACCService() < TargetPool)
                 {
                     int port = GetPort();
                     pending[port] = null!;
@@ -211,12 +211,12 @@ static class Helpers
 
                 Monitor.Wait(PoolLock);
 
-                Logger.Warn("All jobs are busy. Spawning new RccService..");
+                Logger.Warn("All jobs are busy. Spawning new AccService..");
 
                 Monitor.Exit(PoolLock);
 
                 int pport = GetPort();
-                var pproc = RCCService(pport);
+                var pproc = ACCService(pport);
 
                 if (pproc == null)
                 {
@@ -228,7 +228,7 @@ static class Helpers
                 bool alive = false;
                 for (int i = 0; i < 10; i++)
                 {
-                    if (AwaitRCCService(pport, 20)) {
+                    if (AwaitACCService(pport, 20)) {
                         alive = true;
                         break;
                     }
@@ -247,7 +247,7 @@ static class Helpers
         }
     }
 
-    private static void releaseRCCService(int port)
+    private static void releaseACCService(int port)
     {
         lock (PoolLock)
         {
@@ -323,7 +323,7 @@ static class Helpers
                     ports = active.Keys.Concat(idle.Keys).ToList();
                 }
 
-                ready = ports.All(port => AwaitRCCService(port, 5000));
+                ready = ports.All(port => AwaitACCService(port, 5000));
 
                 lock (PoolLock)
                 {
@@ -438,7 +438,7 @@ static class Helpers
             {
                 listener.Stop();
                 if (Config.debug)
-                    Logger.Print($"Port {port} is chosen for the next RccServiceProcess.");
+                    Logger.Print($"Port {port} is chosen for the next AccServiceProcess.");
                 return port;
             }
         }
@@ -463,7 +463,7 @@ static class Helpers
     public static bool Render(string jobId, int placeId, out string? render)
     {
         render = null;
-        var (proc, SOAPPort, panic) = getRCCService();
+        var (proc, SOAPPort, panic) = getACCService();
         if (proc == null) return false;
         int pid = proc.Id;
 
@@ -479,7 +479,7 @@ static class Helpers
         }
         else
         {
-            releaseRCCService(SOAPPort);
+            releaseACCService(SOAPPort);
         }
         return true;
     }
@@ -487,7 +487,7 @@ static class Helpers
     public static bool ARender(string jobId, int placeId, out string? render, bool headshot, bool isclothing)
     {
         render = null;
-        var (proc, SOAPPort, panic) = getRCCService();
+        var (proc, SOAPPort, panic) = getACCService();
         if (proc == null) return false;
         int pid = proc.Id;
 
@@ -503,7 +503,7 @@ static class Helpers
         }
         else
         {
-            releaseRCCService(SOAPPort);
+            releaseACCService(SOAPPort);
         }
         return true;
     }
@@ -511,7 +511,7 @@ static class Helpers
     public static bool MRender(string jobId, int placeId, out string? render)
     {
         render = null;
-        var (proc, SOAPPort, panic) = getRCCService();
+        var (proc, SOAPPort, panic) = getACCService();
         if (proc == null) return false;
         int pid = proc.Id;
 
@@ -527,7 +527,7 @@ static class Helpers
         }
         else
         {
-            releaseRCCService(SOAPPort);
+            releaseACCService(SOAPPort);
         }
         return true;
     }
@@ -535,7 +535,7 @@ static class Helpers
     public static bool MMRender(string jobId, int placeId, out string? render)
     {
         render = null;
-        var (proc, SOAPPort, panic) = getRCCService();
+        var (proc, SOAPPort, panic) = getACCService();
         if (proc == null) return false;
         int pid = proc.Id;
 
@@ -551,7 +551,7 @@ static class Helpers
         }
         else
         {
-            releaseRCCService(SOAPPort);
+            releaseACCService(SOAPPort);
         }
         return true;
     }
@@ -572,7 +572,7 @@ static class Helpers
 
             if (dedicatedCount >= MaxDedicated)
             {
-                Logger.Warn($"{dedicatedCount} dedicated RccService processes are active, using Pooled now");
+                Logger.Warn($"{dedicatedCount} dedicated AccService processes are active, using Pooled now");
 
                 var kv = idle.FirstOrDefault();
 
@@ -586,18 +586,18 @@ static class Helpers
                 }
                 else
                 {
-                    (proc, SOAPPort, panic) = getRCCService();
+                    (proc, SOAPPort, panic) = getACCService();
                 }
             }
             else
             {
                 if (Config.poolgs)
                 {
-                    (proc, SOAPPort) = startDedicatedRCCService();
+                    (proc, SOAPPort) = startDedicatedACCService();
                 }
                 else
                 {
-                    (proc, SOAPPort, panic) = getRCCService();
+                    (proc, SOAPPort, panic) = getACCService();
                 }
             }
         }
@@ -621,7 +621,7 @@ static class Helpers
             }
             else
             {
-                releaseRCCService(SOAPPort);
+                releaseACCService(SOAPPort);
             }
             return 0;
         }
@@ -643,18 +643,18 @@ static class Helpers
         return fakeahport;
     }
 
-    private static Process? RCCService(int port)
+    private static Process? ACCService(int port)
     {
         try
         {
-            string exe = Path.Combine(Config.RCCDirectory, $"{Config.name}.exe");
+            string exe = Path.Combine(Config.ACCDirectory, $"{Config.name}.exe");
             bool win = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
             var psi = new ProcessStartInfo
             {
                 FileName = win ? exe : "wine",
                 Arguments = win ? $"/Console /content:content\\\\ {port}" : $"\"{exe}\" /Console /content:content\\\\ {port}",
-                WorkingDirectory = Config.RCCDirectory,
+                WorkingDirectory = Config.ACCDirectory,
                 UseShellExecute = true,
                 CreateNoWindow = false
             };
@@ -663,7 +663,7 @@ static class Helpers
             if (proc == null) return null;
 
             proc.EnableRaisingEvents = true;
-            proc.Exited += (_, __) => RCCServiceExit(proc.Id, port);
+            proc.Exited += (_, __) => ACCServiceExit(proc.Id, port);
 
             if (win)
                 proc.PriorityClass = Config.realtime ? ProcessPriorityClass.RealTime : ProcessPriorityClass.High;
@@ -672,7 +672,7 @@ static class Helpers
 
             for (int i = 0; i < 5; i++)
             {
-                if (AwaitRCCService(port, 20))
+                if (AwaitACCService(port, 20))
                 {
                     ready = true;
                     break;
@@ -695,7 +695,7 @@ static class Helpers
                 }
                 catch { }
 
-                Logger.Print($"Started RccService process. Process ID = {proc.Id}, Port = {port}");
+                Logger.Print($"Started AccService process. Process ID = {proc.Id}, Port = {port}");
             }
             catch { }
 
@@ -772,7 +772,7 @@ static class Helpers
         }
     }
 
-    private static bool AwaitRCCService(int port, int timeoutMs)
+    private static bool AwaitACCService(int port, int timeoutMs)
     {
         var sw = Stopwatch.StartNew();
 
@@ -818,35 +818,6 @@ static class Helpers
         render = null;
 
         Config.ReloadScripts();
-        if (Config.signing && enforceSigning)
-        {
-            string script = type.Trim();
-            string[] lines = script.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-
-            if (lines.Length == 0)
-            {
-                Logger.Error("Script is empty.");
-                return false;
-            }
-
-            string signatureLine = lines[0].Trim();
-            string scriptContent = string.Join("\n", lines.Skip(1)).Trim();
-
-            bool valid = Config.Verification(scriptContent, signatureLine);
-
-            if (!valid)
-            {
-                Logger.Error($"Script verification failed, please check your script signatures and try again (signature: {signatureLine})");
-                return false;
-            }
-            else
-            {
-                if (Config.debug)
-                    Logger.Print("Signature is valid");
-            }
-
-            type = scriptContent;
-        }
         try
         {
             ServicePointManager.UseNagleAlgorithm = false;
@@ -915,14 +886,13 @@ static class Helpers
             req.Headers.Add("SOAPAction", jobtype);
             req.Headers.Host = $"127.0.0.1:{port}";
             req.Headers.ConnectionClose = true;
-            client.DefaultRequestHeaders.ExpectContinue = Config.autistic;
 
             using var resp = client.SendAsync(req, HttpCompletionOption.ResponseContentRead).GetAwaiter().GetResult();
             var responseText = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
             if (!resp.IsSuccessStatusCode)
             {
-                Logger.Error("An unexpected error was occurred in RccService:\n" + responseText);
+                Logger.Error("An unexpected error was occurred in AccService:\n" + responseText);
                 return false;
             }
 
@@ -938,7 +908,7 @@ static class Helpers
                 } else
                 {
                     Logger.Error("Render value wasn't found! ANRSAL doesn't support ASYNC renders yet.");
-                    Logger.Error("RccService's response: " + responseText);
+                    Logger.Error("AccService's response: " + responseText);
                     return false;
                 }
             }
@@ -1052,7 +1022,7 @@ static class Helpers
         return null;
     }
 
-    private static void RCCServiceExit(int pid, int port)
+    private static void ACCServiceExit(int pid, int port)
     {
         bool booldedicated;
 
