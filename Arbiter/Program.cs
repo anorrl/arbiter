@@ -379,8 +379,7 @@ public class Program
                 return Results.Json(new { error = "unauthorized" }, statusCode: 401);
             }
 
-            int fakeahjobs = Math.Clamp(limit ?? 50, 1, 50);
-            var jobs = Helpers.GetAllJobs(port, fakeahjobs);
+            var jobs = Helpers.GetAllJobs(port, Math.Clamp(limit ?? 50, 1, 50));
             return Results.Json(jobs);
         }).RequireRateLimiting("strict");
 

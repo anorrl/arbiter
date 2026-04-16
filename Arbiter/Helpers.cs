@@ -813,7 +813,7 @@ static class Helpers
         }
     }
 
-    private static bool SOAP(string jobId, int port, int placeId, string type, int howlonguntilwedie, int category, out string? render, bool teamcreate = false, int fakeahport = 53640, bool headshot = false, bool isclothing = false, List<LuaValue>? arguments = null, string jobtype = "OpenJobEx", int maxPlayers = 100)
+    private static bool SOAP(string jobId, int port, int placeId, string type, int howlonguntilwedie, int category, out string? render, bool teamcreate = false, int gameport = 53640, bool headshot = false, bool isclothing = false, List<LuaValue>? arguments = null, string jobtype = "OpenJobEx", int maxPlayers = 100)
     {
         render = null;
 
@@ -824,7 +824,7 @@ static class Helpers
 
             type = type.Replace("{placeId}", placeId.ToString());
             type = type.Replace("{jobId}", jobId);
-            type = type.Replace("{port}", fakeahport.ToString());
+            type = type.Replace("{port}", gameport.ToString());
             type = type.Replace("{accesskey}", Config.AccessKey);
             type = type.Replace("{domain}", Config.BaseURL);
             type = type.Replace("{teamcreate}", teamcreate.ToString().ToLower());
