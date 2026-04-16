@@ -849,13 +849,13 @@ static class Helpers
         }
         try
         {
-            ServicePointManager.Expect100Continue = Config.autistic;
             ServicePointManager.UseNagleAlgorithm = false;
 
             type = type.Replace("{placeId}", placeId.ToString());
             type = type.Replace("{jobId}", jobId);
             type = type.Replace("{port}", fakeahport.ToString());
             type = type.Replace("{accesskey}", Config.AccessKey);
+            type = type.Replace("{domain}", Config.BaseURL);
             type = type.Replace("{teamcreate}", teamcreate.ToString().ToLower());
             type = type.Replace("{isheadshot}", headshot.ToString().ToLower());
             type = type.Replace("{isclothing}", isclothing.ToString().ToLower());

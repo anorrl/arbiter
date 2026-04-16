@@ -3,7 +3,7 @@ using System.Text;
 
 static class Config
 {
-    public static string RCCDirectory { get; private set; } = "";
+    public static string ACCDirectory { get; private set; } = "";
     public static string BaseURL { get; private set; } = "www.roblox.com";
     public static string GSScript = "print('get a gameserver script nerd')";
     public static string RScript = "print('get a place render script nerd')";
@@ -22,10 +22,10 @@ static class Config
     public static string AccessKey = "my-mother-ate-fries-lol";
     public static string FakeSECRET = "";
     public static bool experimental { get; private set; } = false;
-    public static bool removeRCCLogs { get; private set; } = false;
-    public static bool Ready { get; set; } = false; // DO NOT CHANGE THIS. THIS WILL BE AUTO SET IF RCCSERVICES ARE READY.
+    public static bool removeACCLogs { get; private set; } = false;
+    public static bool Ready { get; set; } = false; // DO NOT CHANGE THIS. THIS WILL BE AUTO SET IF ACCSERVICES ARE READY.
     public static bool realtime { get; private set; } = false;
-    public static string name = "RCCService";
+    public static string name = "ACCService";
     public static bool signing { get; private set; } = false;
     public static bool inject { get; private set; } = false;
     public static bool autistic { get; private set; } = false;
@@ -189,11 +189,11 @@ static class Config
         {
             switch (args[i])
             {
-                case "--dir": // path for rccservice
+                case "--dir": // path for accservice
                     if (i + 1 >= args.Length)
                         throw new ArgumentException("--dir requires a value");
 
-                    RCCDirectory = args[++i];
+                    ACCDirectory = args[++i];
                     break;
 
                 case "--skip-sysstats": // skip anti skid
@@ -245,7 +245,7 @@ static class Config
                     port = int.Parse(args[++i]); // why are we parsing for this
                     break;
 
-                case "--cores": // how much cpu cores should we use for RCCService
+                case "--cores": // how much cpu cores should we use for ACCService
                     if (i + 1 >= args.Length)
                         throw new ArgumentException("--cores requires a value");
 
@@ -276,31 +276,19 @@ static class Config
                     experimental = true;
                     break;
 
-                case "--removercclogs": // experimental
-                    removeRCCLogs = true;
+                case "--removeacclogs": // experimental
+                    removeACCLogs = true;
                     break;
 
                 case "--realtime": // realtime priority
                     realtime = true;
                     break;
 
-                case "--name": // rccservice name (example: ACCService)
+                case "--name": // accservice name (example: RCCService)
                     if (i + 1 >= args.Length)
                         throw new ArgumentException("--name requires a value");
 
                     name = args[++i];
-                    break;
-
-                case "--sign": // enable signing scripts for security
-                    signing = true;
-                    break;
-
-                case "--inject": // inject a script after spawning in new gameserver, its for JSON RCCServices because roblox sucks.
-                    inject = true;
-                    break;
-
-                case "--autisticrcc": // FUCK YOU RCCSERVICE I HATE YOU
-                    autistic = true;
                     break;
 
                 case "--poolforgameservers": // use pooled rccservices for gameservers
@@ -309,10 +297,10 @@ static class Config
             }
         }
 
-        if (string.IsNullOrWhiteSpace(RCCDirectory) || !Directory.Exists(RCCDirectory))
+        if (string.IsNullOrWhiteSpace(ACCDirectory) || !Directory.Exists(ACCDirectory))
         {
             // I GUESS WE'LL JUST SET OUR OWN
-            RCCDirectory = AppContext.BaseDirectory;
+            ACCDirectory = AppContext.BaseDirectory;
         }
     }
 }
